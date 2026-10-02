@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Trung Tâm Cấp Cứu 115 Quốc Gia Quảng Ninh</title>
+
+    <!-- Khai báo PWA cho iPhone -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="115 Quảng Ninh">
+    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+
+    <!-- Thư viện quét mã QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+
+    <style>
+        :root {
+            --primary: #0b3c5d;
+            --primary-light: #1565c0;
+            --accent: #d32f2f;
+            --success: #2e7d32;
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { 
+            background-color: var(--bg); 
+            color: var(--text-dark); 
+            padding: 12px; 
+            padding-top: env(safe-area-inset-top, 14px);
+            padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)); 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #0b3c5d 0%, #1565c0 100%);
+            color: white;
+            padding: 16px 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(11, 60, 93, 0.2);
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .header-sub { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.85; margin-bottom: 2px; }
+        .app-header h1 { font-size: 15px; font-weight: 800; text-transform: uppercase; line-height: 1.35; letter-spacing: 0.3px; }
+
+        .nav-tabs { display: flex; background: #e2e8f0; border-radius: 10px; padding: 3px; margin-bottom: 12px; gap: 4px; }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: transparent;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .tab-btn.active { background: white; color: var(--primary-light); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+        .card-header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
+        .card-title { font-size: 13px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 6px; text-transform: uppercase; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+        input, select {
+            width: 100%;
+            height: 42px;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            background: #f8fafc;
+            color: var(--text-dark);
+            -webkit-appearance: none;
+        }
+        input:focus, select:focus { border-color: var(--primary-light); background: #ffffff; }
+
+        .calc-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; text-align: center; margin-top: 10px; }
+        .calc-val { font-size: 20px; font-weight: 800; color: var(--success); margin-top: 2px; }
+
+        .btn-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .action-btn { flex: 1; text-align: center; padding: 12px 6px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .btn-gallery { background: #ea580c; }
+        .btn-camera { background: #0284c7; }
+        .btn-clear { background: #ef4444; padding: 6px 12px; font-size: 11px; margin-top: 6px; display: inline-block; }
+
+        .btn-scan-cccd {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
+        }
+
+        .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .preview-item { position: relative; width: 100%; height: 90px; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+        .img-count { font-size: 12px; color: var(--success); font-weight: 700; margin-top: 6px; text-align: center; display: none; }
+
+        .btn-submit {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(135deg, #0b3c5d 0%, #1565c0 100%);
+            color: white;
+            font-size: 15px;
+            font-weight: 800;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(11, 60, 93, 0.25);
+            margin-top: 6px;
+        }
+        .btn-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+        .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .check-note { font-size: 12px; color: var(--text-muted); }
+        .btn-reload { background: #e2e8f0; color: var(--text-dark); border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; }
+        .trip-item {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 5px solid var(--primary-light);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+            border: 1px solid var(--border);
+        }
+        .trip-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+        .trip-plate { font-weight: 800; font-size: 14px; color: var(--primary); background: #e0f2fe; padding: 2px 6px; border-radius: 4px; }
+        .trip-code { font-size: 12px; font-weight: 700; color: #d97706; }
+        .trip-patient { font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+        .trip-route { font-size: 12px; color: #475569; margin-bottom: 6px; line-height: 1.4; }
+        .trip-meta { display: flex; justify-content: space-between; font-size: 11px; color: #94a3b8; border-top: 1px dashed var(--border); padding-top: 6px; }
+
+        /* Modal camera */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999; justify-content: center; align-items: center; padding: 14px; }
+        .modal-content { background: white; border-radius: 14px; width: 100%; max-width: 440px; padding: 14px; position: relative; }
+        .modal-title { font-size: 14px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-align: center; }
+        #qr-reader { width: 100%; border-radius: 10px; overflow: hidden; background: #000; min-height: 280px; }
+
+        .scanner-toolbar { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 8px; }
+        .btn-switch-cam { background: #f59e0b; color: white; border: none; padding: 9px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; flex: 2; }
+        .btn-torch { background: #475569; color: white; border: none; padding: 9px 10px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; flex: 1; }
+        .cam-status { font-size: 11px; color: #64748b; font-weight: 600; text-align: center; margin-top: 4px; }
+
+        .modal-actions { margin-top: 10px; display: flex; gap: 8px; }
+        .modal-btn { flex: 1; padding: 10px; font-size: 13px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-close-modal { background: #94a3b8; color: white; }
+        .btn-upload-scan { background: #0284c7; color: white; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <div class="header-sub">Hệ Thống Điều Hành Cấp Cứu</div>
+        <h1>TRUNG TÂM CẤP CỨU 115 QUỐC GIA QUẢNG NINH</h1>
+    </div>
+
+    <div class="nav-tabs">
+        <button type="button" class="tab-btn active" id="tabBtnCreate" onclick="switchTab('create')">📝 LẬP LỆNH MỚI</button>
+        <button type="button" class="tab-btn" id="tabBtnList" onclick="switchTab('list')">📋 ĐỐI SOÁT 2 NGÀY</button>
+    </div>
+
+    <!-- TAB 1: FORM LẬP LỆNH -->
+    <div id="tabContentCreate" class="tab-content active">
+        <form id="tripForm">
+            <div class="card">
+                <div class="card-header-flex">
+                    <div class="card-title">🚑 1. THÔNG TIN XE & CHUYẾN</div>
+                </div>
+                <div class="form-group">
+                    <label>Biển số xe điều động:</label>
+                    <select id="bien_so">
+                        <option value="14B-039.57">14B-039.57</option>
+                        <option value="14B-039.64">14B-039.64</option>
+                        <option value="14B-046.84">14B-046.84</option>
+                        <option value="14K-272.02">14K-272.02</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Mã chuyến (*):</label><input type="text" id="ma_chuyen" required placeholder="Nhập mã lệnh / số chuyến..."></div>
+                <div class="form-group"><label>Ngày điều động:</label><input type="date" id="ngay_thang"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header-flex">
+                    <div class="card-title">👤 2. THÔNG TIN BỆNH NHÂN</div>
+                    <button type="button" class="btn-scan-cccd" id="btnOpenScanner">🔍 QUÉT QR CCCD</button>
+                </div>
+                <div class="form-group"><label>Họ và tên bệnh nhân:</label><input type="text" id="ho_ten" placeholder="Quét CCCD hoặc nhập họ tên..."></div>
+                <div class="form-group"><label>Số thẻ Căn cước / CCCD:</label><input type="tel" id="cccd" placeholder="12 chữ số CCCD..."></div>
+                <div class="form-group"><label>Năm sinh:</label><input type="number" id="nam_sinh" placeholder="Ví dụ: 1985"></div>
+                <div class="form-group"><label>Địa chỉ thường trú (theo CCCD):</label><input type="text" id="dia_chi" placeholder="Địa chỉ nơi cư trú..."></div>
+                <div class="form-group"><label>Nơi đón bệnh nhân (Khoa / Viện):</label><input type="text" id="noi_don" placeholder="VD: Cấp cứu BV Bãi Cháy..."></div>
+                <div class="form-group"><label>Điểm đến (Bệnh viện tuyến trên):</label><input type="text" id="diem_den" placeholder="VD: BV Bạch Mai / BV Việt Đức..."></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header-flex">
+                    <div class="card-title">📁 3. HỒ SƠ BỆNH ÁN & GIẤY TỜ</div>
+                </div>
+                <div class="btn-row">
+                    <label class="action-btn btn-gallery" for="input_gallery">📂 CHỌN NHIỀU ẢNH</label>
+                    <input type="file" id="input_gallery" accept="image/*" multiple style="display: none;">
+
+                    <label class="action-btn btn-camera" for="input_camera">📷 CHỤP ẢNH</label>
+                    <input type="file" id="input_camera" accept="image/*" capture="environment" style="display: none;">
+                </div>
+
+                <div style="text-align: center;">
+                    <div class="img-count" id="lbl_count">Đã chọn: 0 ảnh</div>
+                    <button type="button" id="btn_clear_all" class="action-btn btn-clear" style="display: none;">Xóa chọn lại ảnh</button>
+                </div>
+                <div class="preview-grid" id="preview_box"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header-flex">
+                    <div class="card-title">🩺 4. KÍP TRỰC & VẬT TƯ</div>
+                </div>
+                <div class="form-group"><label>Lái xe trực:</label><input type="text" id="lai_xe"></div>
+                <div class="form-group"><label>Cán bộ y tế phụ trách:</label><input type="text" id="y_te"></div>
+                <div class="form-group"><label>Người khấu:</label><input type="text" id="nguoi_khau"></div>
+                <div class="form-group"><label>Người thu tiền:</label><input type="text" id="nguoi_thu"></div>
+                <div class="form-group"><label>Tên vật tư tiêu hao / Thuốc:</label><input type="text" id="ten_vat_tu"></div>
+                <div class="form-group"><label>Xuất hóa đơn VAT:</label><select id="co_vat"><option value="Không">Không</option><option value="Có">Có</option></select></div>
+                <div class="form-group"><label>Ghi chú lộ trình / Tình trạng:</label><input type="text" id="ghi_chu"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header-flex">
+                    <div class="card-title">💰 5. TÀI CHÍNH CHUYẾN XE</div>
+                </div>
+                <div class="form-group"><label>Tổng thu (VNĐ):</label><input type="number" id="tong_thu" value="0" oninput="recalc()"></div>
+                <div class="form-group"><label>Nhiên liệu / Dầu xe:</label><input type="number" id="dau_xe" value="0" oninput="recalc()"></div>
+                <div class="form-group"><label>Khấu trừ:</label><input type="number" id="khau" value="0" oninput="recalc()"></div>
+                <div class="form-group"><label>Chi phí vật tư tiêu hao:</label><input type="number" id="vat_tu" value="0" oninput="recalc()"></div>
+                <div class="calc-box">
+                    <div style="font-size: 11px; color: #475569; font-weight: 600;">SỐ TIỀN CÒN LẠI THỰC NHẬN</div>
+                    <div class="calc-val" id="lbl_con_lai">0 đ</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">LƯU LỆNH LÊN HỆ THỐNG CLOUD</button>
+        </form>
+    </div>
+
+    <!-- TAB 2: ĐỐI SOÁT 48H -->
+    <div id="tabContentList" class="tab-content">
+        <div class="card">
+            <div class="check-header">
+                <div>
+                    <div class="card-title">📋 CÁC LỆNH ĐIỀU ĐỘNG (48H GẦN NHẤT)</div>
+                    <div class="check-note">Kiểm tra chéo kíp trực & xe đã gửi lệnh</div>
+                </div>
+                <button type="button" class="btn-reload" onclick="loadRecentTrips()">🔄 Làm mới</button>
+            </div>
+            <div id="recentTripsContainer">
+                <div style="text-align: center; padding: 20px; font-size: 13px; color: #64748b;">Đang tải danh sách lệnh điều động...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Camera Quét CCCD -->
+    <div class="modal" id="scannerModal">
+        <div class="modal-content">
+            <div class="modal-title">HƯỚNG CAMERA VÀO MÃ QR TRÊN THẺ CCCD</div>
+            <div id="qr-reader"></div>
+
+            <div class="scanner-toolbar">
+                <button type="button" class="btn-switch-cam" id="btnSwitchCamera">🔄 ĐỔI CAMERA</button>
+                <button type="button" class="btn-torch" id="btnTorch">🔦 ĐÈN</button>
+            </div>
+            <div class="cam-status" id="camStatusText">Đang khởi động camera...</div>
+            
+            <div class="modal-actions">
+                <label class="modal-btn btn-upload-scan" for="file_qr_input">📁 TỪ ẢNH</label>
+                <input type="file" id="file_qr_input" accept="image/*" style="display: none;">
+                <button type="button" class="modal-btn btn-close-modal" id="btnCloseScanner">ĐÓNG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://mbxeppmhkxwbqtgvirpq.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1ieGVwcG1oa3h3YnF0Z3ZpcnBxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkyMzY1NDIsImV4cCI6MjEwNDgxMjU0Mn0.j5me4h4NTTv7EgYcsWqi3buxGqotednZzsA7nUAy5m8"; 
+
+        document.getElementById('ngay_thang').value = new Date().toISOString().split('T')[0];
+
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(850, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            } catch(e) {}
+        }
+
+        function switchTab(tab) {
+            const btnCreate = document.getElementById('tabBtnCreate');
+            const btnList = document.getElementById('tabBtnList');
+            const contentCreate = document.getElementById('tabContentCreate');
+            const contentList = document.getElementById('tabContentList');
+
+            if (tab === 'create') {
+                btnCreate.classList.add('active');
+                btnList.classList.remove('active');
+                contentCreate.classList.add('active');
+                contentList.classList.remove('active');
+            } else {
+                btnList.classList.add('active');
+                btnCreate.classList.remove('active');
+                contentList.classList.add('active');
+                contentCreate.classList.remove('active');
+                loadRecentTrips();
+            }
+        }
+
+        async function loadRecentTrips() {
+            const container = document.getElementById('recentTripsContainer');
+            container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 13px; color: #64748b;">Đang tải danh sách lệnh điều động...</div>`;
+
+            const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/trips?ngay_thang=gte.${twoDaysAgo}&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+
+                if (!res.ok) throw new Error("Không thể tải danh sách");
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 13px; color: #94a3b8;">Không có lệnh nào trong 2 ngày qua.</div>`;
+                    return;
+                }
+
+                let html = '';
+                data.forEach(trip => {
+                    const patient = trip.ho_ten || 'Chưa ghi tên BN';
+                    const route = `${trip.noi_don || 'Chưa có nơi đón'} ➔ ${trip.diem_den || 'Chưa có nơi đến'}`;
+                    const driver = trip.lai_xe ? `Lái xe: ${trip.lai_xe}` : '';
+                    const medic = trip.y_te ? `YT: ${trip.y_te}` : '';
+                    const crew = [driver, medic].filter(Boolean).join(' | ');
+
+                    html += `
+                        <div class="trip-item">
+                            <div class="trip-top">
+                                <span class="trip-plate">🚑 ${trip.bien_so || '---'}</span>
+                                <span class="trip-code">Lệnh: ${trip.ma_chuyen || '---'}</span>
+                            </div>
+                            <div class="trip-patient">👤 ${patient} (${trip.nam_sinh || '---'})</div>
+                            <div class="trip-route">📍 ${route}</div>
+                            <div class="trip-meta">
+                                <span>${crew || 'Chưa phân kíp'}</span>
+                                <span>${trip.ngay_thang || ''}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } catch (err) {
+                container.innerHTML = `<div style="text-align: center; padding: 20px; font-size: 13px; color: #ef4444;">Lỗi tải dữ liệu: ${err.message}</div>`;
+            }
+        }
+
+        /* ================= QUÉT VÀ BÓC TÁCH QR CCCD ================= */
+        let html5QrCode = null;
+        let availableCameras = [];
+        let currentCamIndex = 0;
+        let isTorchOn = false;
+
+        const scannerModal = document.getElementById('scannerModal');
+        const btnOpenScanner = document.getElementById('btnOpenScanner');
+        const btnCloseScanner = document.getElementById('btnCloseScanner');
+        const btnSwitchCamera = document.getElementById('btnSwitchCamera');
+        const btnTorch = document.getElementById('btnTorch');
+        const camStatusText = document.getElementById('camStatusText');
+        const fileQrInput = document.getElementById('file_qr_input');
+
+        function parseAndApplyCCCD(qrText) {
+            if (!qrText) return false;
+            const parts = qrText.split('|');
+
+            if (parts.length >= 6) {
+                playBeep();
+
+                const cccdNum = parts[0].trim();
+                const fullName = parts[2].trim();
+                const dob = parts[3].trim();
+                const address = parts[5].trim();
+
+                if (fullName) document.getElementById('ho_ten').value = fullName;
+                if (cccdNum) document.getElementById('cccd').value = cccdNum;
+                if (dob && dob.length >= 8) {
+                    document.getElementById('nam_sinh').value = dob.substring(dob.length - 4);
+                }
+                if (address) document.getElementById('dia_chi').value = address;
+
+                closeScanner();
+                alert(`✅ ĐÃ NHẬN DIỆN THÀNH CÔNG:\n- Họ tên: ${fullName}\n- CCCD: ${cccdNum}\n- Năm sinh: ${document.getElementById('nam_sinh').value}\n- Địa chỉ: ${address}`);
+                return true;
+            }
+            return false;
+        }
+
+        async function startScanner() {
+            scannerModal.style.display = 'flex';
+            camStatusText.innerText = "Đang kết nối camera...";
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+
+            const qrConfig = {
+                fps: 20,
+                qrbox: { width: 260, height: 260 },
+                aspectRatio: 1.0
+            };
+
+            try {
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+
+                availableCameras = await Html5Qrcode.getCameras();
+
+                if (availableCameras && availableCameras.length > 0) {
+                    currentCamIndex = 0;
+                    for (let i = 0; i < availableCameras.length; i++) {
+                        const l = (availableCameras[i].label || '').toLowerCase();
+                        if (l.includes('back') || l.includes('rear') || l.includes('sau') || l.includes('environment')) {
+                            currentCamIndex = i;
+                            break;
+                        }
+                    }
+                    if (availableCameras.length > 1 && currentCamIndex === 0) {
+                        currentCamIndex = availableCameras.length - 1;
+                    }
+
+                    const selectedCam = availableCameras[currentCamIndex];
+                    camStatusText.innerText = `Camera: ${selectedCam.label || 'Camera ' + (currentCamIndex + 1)}`;
+
+                    await html5QrCode.start(
+                        selectedCam.id,
+                        qrConfig,
+                        (decodedText) => parseAndApplyCCCD(decodedText),
+                        (errorMessage) => {}
+                    );
+                } else {
+                    await html5QrCode.start(
+                        { facingMode: "environment" },
+                        qrConfig,
+                        (decodedText) => parseAndApplyCCCD(decodedText),
+                        (errorMessage) => {}
+                    );
+                }
+            } catch (err) {
+                const errorMsg = (err && err.message) ? err.message : (typeof err === 'string' ? err : 'Không xác định');
+                console.error("Camera error:", err);
+
+                try {
+                    await html5QrCode.start(
+                        { facingMode: "user" },
+                        qrConfig,
+                        (decodedText) => parseAndApplyCCCD(decodedText),
+                        (errorMessage) => {}
+                    );
+                } catch (fallbackErr) {
+                    alert("Không thể khởi động camera.\nHãy bấm Cho phép khi Safari hỏi quyền camera.\nChi tiết: " + errorMsg);
+                    closeScanner();
+                }
+            }
+        }
+
+        btnSwitchCamera.addEventListener('click', async () => {
+            if (!availableCameras || availableCameras.length <= 1) {
+                alert("Thiết bị này không có nhiều camera để đổi.");
+                return;
+            }
+            currentCamIndex = (currentCamIndex + 1) % availableCameras.length;
+            const selectedCam = availableCameras[currentCamIndex];
+            camStatusText.innerText = `Đổi sang: ${selectedCam.label || 'Camera ' + (currentCamIndex + 1)}`;
+
+            try {
+                if (html5QrCode.isScanning) {
+                    await html5QrCode.stop();
+                }
+                await html5QrCode.start(
+                    selectedCam.id,
+                    { fps: 20, qrbox: { width: 260, height: 260 } },
+                    (decodedText) => parseAndApplyCCCD(decodedText),
+                    (errorMessage) => {}
+                );
+            } catch (err) {
+                alert("Không thể chuyển camera: " + (err.message || err));
+            }
+        });
+
+        btnTorch.addEventListener('click', async () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                try {
+                    isTorchOn = !isTorchOn;
+                    await html5QrCode.applyVideoConstraints({
+                        advanced: [{ torch: isTorchOn }]
+                    });
+                    btnTorch.innerText = isTorchOn ? "💡 TẮT" : "🔦 ĐÈN";
+                } catch(e) {
+                    alert("Trình duyệt không hỗ trợ bật đèn Flash.");
+                }
+            }
+        });
+
+        async function closeScanner() {
+            if (html5QrCode) {
+                try {
+                    if (html5QrCode.isScanning) await html5QrCode.stop();
+                } catch (e) {}
+            }
+            isTorchOn = false;
+            btnTorch.innerText = "🔦 ĐÈN";
+            scannerModal.style.display = 'none';
+        }
+
+        btnOpenScanner.addEventListener('click', startScanner);
+        btnCloseScanner.addEventListener('click', closeScanner);
+
+        fileQrInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+                const decodedText = await html5QrCode.scanFile(file, true);
+                parseAndApplyCCCD(decodedText);
+            } catch (err) {
+                alert("Không nhận diện được mã QR từ hình ảnh vừa chọn.");
+            } finally {
+                fileQrInput.value = "";
+            }
+        });
+
+        /* ================= QUẢN LÝ ẢNH HỒ SƠ ================= */
+        let listProcessedBlobs = [];
+        const galleryInput = document.getElementById('input_gallery');
+        const cameraInput = document.getElementById('input_camera');
+        const previewBox = document.getElementById('preview_box');
+        const lblCount = document.getElementById('lbl_count');
+        const btnClear = document.getElementById('btn_clear_all');
+
+        function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const maxDim = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height && width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', 0.8);
+                    };
+                };
+            });
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+            lblCount.style.display = "block";
+            lblCount.innerText = `Đang xử lý ${files.length} ảnh...`;
+
+            for (const file of files) {
+                const compressedBlob = await compressImage(file);
+                listProcessedBlobs.push(compressedBlob);
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'preview-item';
+                const imgEl = document.createElement('img');
+                imgEl.src = URL.createObjectURL(compressedBlob);
+                itemDiv.appendChild(imgEl);
+                previewBox.appendChild(itemDiv);
+            }
+
+            lblCount.innerText = `✅ Đã chọn tổng cộng: ${listProcessedBlobs.length} ảnh`;
+            btnClear.style.display = "inline-block";
+        }
+
+        galleryInput.addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+            galleryInput.value = "";
+        });
+
+        cameraInput.addEventListener('change', (e) => {
+            handleFiles(Array.from(e.target.files));
+            cameraInput.value = "";
+        });
+
+        btnClear.addEventListener('click', () => {
+            listProcessedBlobs = [];
+            previewBox.innerHTML = "";
+            lblCount.style.display = "none";
+            btnClear.style.display = "none";
+        });
+
+        function recalc() {
+            const t = parseFloat(document.getElementById('tong_thu').value) || 0;
+            const d = parseFloat(document.getElementById('dau_xe').value) || 0;
+            const k = parseFloat(document.getElementById('khau').value) || 0;
+            const v = parseFloat(document.getElementById('vat_tu').value) || 0;
+            document.getElementById('lbl_con_lai').innerText = (t - (d + k + v)).toLocaleString('vi-VN') + ' đ';
+        }
+
+        /* ================= GỬI LỆNH LÊN SUPABASE ================= */
+        document.getElementById('tripForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerText = "ĐANG TẢI ẢNH LÊN CLOUD...";
+
+            let uploadedUrls = [];
+
+            try {
+                if (listProcessedBlobs.length > 0) {
+                    for (let i = 0; i < listProcessedBlobs.length; i++) {
+                        const blob = listProcessedBlobs[i];
+                        btn.innerText = `ĐANG TẢI ẢNH (${i + 1}/${listProcessedBlobs.length})...`;
+                        
+                        const fileName = `hoso_${Date.now()}_${i}_${Math.random().toString(36).substring(7)}.jpg`;
+                        
+                        const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/ho_so_115/${fileName}`, {
+                            method: 'POST',
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                'Content-Type': 'image/jpeg'
+                            },
+                            body: blob
+                        });
+
+                        if (uploadRes.ok) {
+                            uploadedUrls.push(`${SUPABASE_URL}/storage/v1/object/public/ho_so_115/${fileName}`);
+                        }
+                    }
+                }
+
+                btn.innerText = "ĐANG LƯU DỮ LIỆU CHUYẾN...";
+
+                const t = parseFloat(document.getElementById('tong_thu').value) || 0;
+                const d = parseFloat(document.getElementById('dau_xe').value) || 0;
+                const k = parseFloat(document.getElementById('khau').value) || 0;
+                const v = parseFloat(document.getElementById('vat_tu').value) || 0;
+
+                const payload = {
+                    bien_so: document.getElementById('bien_so').value,
+                    ma_chuyen: document.getElementById('ma_chuyen').value.trim(),
+                    ngay_thang: document.getElementById('ngay_thang').value,
+                    ho_ten: document.getElementById('ho_ten').value.trim(),
+                    cccd: document.getElementById('cccd').value.trim(),
+                    nam_sinh: document.getElementById('nam_sinh').value.trim(),
+                    dia_chi: document.getElementById('dia_chi').value.trim(),
+                    noi_don: document.getElementById('noi_don').value.trim(),
+                    diem_den: document.getElementById('diem_den').value.trim(),
+                    lai_xe: document.getElementById('lai_xe').value.trim(),
+                    y_te: document.getElementById('y_te').value.trim(),
+                    nguoi_khau: document.getElementById('nguoi_khau').value.trim(),
+                    nguoi_thu: document.getElementById('nguoi_thu').value.trim(),
+                    ten_vat_tu: document.getElementById('ten_vat_tu').value.trim(),
+                    co_vat: document.getElementById('co_vat').value,
+                    ghi_chu: document.getElementById('ghi_chu').value.trim(),
+                    tong_thu: t, dau_xe: d, khau: k, vat_tu: v,
+                    con_lai: t - (d + k + v),
+                    hinh_anh: uploadedUrls.join(",")
+                };
+
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/trips`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(`✅ GỬI LỆNH THÀNH CÔNG!\nĐã cập nhật chuyến của xe ${payload.bien_so} lên hệ thống.`);
+                    document.getElementById('ma_chuyen').value = '';
+                    document.getElementById('ho_ten').value = '';
+                    document.getElementById('cccd').value = '';
+                    document.getElementById('nam_sinh').value = '';
+                    document.getElementById('dia_chi').value = '';
+                    document.getElementById('noi_don').value = '';
+                    document.getElementById('diem_den').value = '';
+                    document.getElementById('tong_thu').value = '0';
+                    document.getElementById('dau_xe').value = '0';
+                    document.getElementById('khau').value = '0';
+                    document.getElementById('vat_tu').value = '0';
+                    listProcessedBlobs = [];
+                    previewBox.innerHTML = "";
+                    lblCount.style.display = "none";
+                    btnClear.style.display = "none";
+                    recalc();
+
+                    switchTab('list');
+                } else {
+                    const errRes = await res.json();
+                    alert("Lỗi lưu dữ liệu: " + (errRes.message || "Không xác định"));
+                }
+            } catch(err) {
+                alert("Đã xảy ra lỗi: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "LƯU LỆNH LÊN HỆ THỐNG CLOUD";
+            }
+        });
+    </script>
+</body>
+</html>
